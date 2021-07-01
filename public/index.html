@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+    <head>
+        <meta charset="utf-8" />
+        <script src="https://ajax.aspnetcdn.com/ajax/jQuery/jquery-1.8.0.js"></script>
+
+        <link href="jquery-ui.css" rel="stylesheet">
+        <title>金山管樂24屆大成畫位表</title>
+
+        <style>
+            body{
+                background-color: #B9A2E8;
+                font-family: "Trebuchet MS", sans-serif;
+                margin: 50px;text-align: center;}
+            h2   {color: blue;text-align: center;}
+            p    {color: brown;text-align: center;}
+            strong{font-size: 30px;}
+            th, td {
+                border: 5px solid black;
+                border-collapse: collapse;
+                text-align: center;}
+            div{
+                text-align: center;}
+            footer{text-align: center;}
+            .ui-dialog-titlebar-close {visibility: hidden;}
+            @media(min-width:280px){h2{font-size: 22px;}}
+            @media(min-width:350px){h2{font-size: 30px;}}
+            @media(min-width:400px){h2{font-size: 35px;}}
+            @media(min-width:700px){h2{font-size: 40px;}}
+        </style>
+    </head>
+
+    <body>
+        <header>
+            <meta name="viewport" content="width=device-width, initial-scale=1">
+        </header>
+        <article>
+            <nav><a href=""></a></nav>
+            <div><h2>金山管樂24屆大成</h1><strong>畫位表</strong>
+                <img src="images/seat.jpg"width="100%"></img>
+                <p id="button"><button id="order" class="ui-button ui-corner-all ui-widget">
+                <span class="ui-icon ui-icon-newwin"></span>畫位</button></p></div>
+            <div id="join" title="填寫資料">
+                <form id="form" autocomplete="on">
+                    <label for="col">排:</label>
+                    <select id="col" onchange="change()">
+                        <option>請選擇</option>
+                    </select>
+                    <label for="seat">座位:</label>
+                    <select id="seat"></select><br>
+                    <label for="name">姓名:</label><br>
+                    <input type="text" id="name"><br>
+                    <label for="phone">電話:</label><br>
+                    <input type="text" id="phone"><br>
+                    <label for="notice">備註:</label><br>
+                    <textarea name="notice" rows="2" cols="30"></textarea><br>
+                    <span id="elert" style="color:red"></span>
+                </form>
+            </div>
+
+            <script src="jquery-ui.js"></script>
+            <script src="https://www.gstatic.com/firebasejs/8.6.4/firebase-app.js"></script>
+            <script src="https://www.gstatic.com/firebasejs/8.6.2/firebase-firestore.js"></script>
+            <script src="https://www.gstatic.com/firebasejs/8.6.2/firebase-analytics.js"></script>
+            <script>
+                
+                var config = {
+                    projectId: "jswb-24th",
+                    apiKey: "t2TDmzMo9uuigxs8DCw2unyqGOxAfe0Yq6PMjzPy",
+                    authDomain: "jswb-24th.firebaseapp.com",
+                    databaseURL: "https://jswb-24th-default-rtdb.firebaseio.com/",
+                    
+                };
+                firebase.initializeApp(config);
+
+                var db = firebase.firestore();
+
+                var seats = Array(19);
+                seats[0] = Array(18).fill(0);
+                seats[1] = Array(19).fill(0);
+                seats[2] = Array(20).fill(0);
+                seats[3] = Array(19).fill(0);
+                seats[4] = Array(20).fill(0);
+                for(i = 5; i<9; i++)
+                    seats[i] = Array(21).fill(0);
+                seats[9] = Array(13).fill(0);
+                seats[10] = Array(24).fill(0);
+                for(i = 11; i < 19; i++)
+                    seats[i] = Array(25).fill(0);
+                for(i = 0; i<15; i++)
+                    seats[18][i] = 1;
+
+                db.collection("大成畫位").get().then((querySnapshot) => {
+                    querySnapshot.forEach((doc) => {
+                        var num = doc.id % 100;
+                        var row = (doc.id-num)/100;
+                        seats[row-1][num-1] = 1;
+                    });
+
+                    var col = document.getElementById("col");
+                    var option = document.getElementById("seat");
+
+                    for(i = 1; i <= 19; i++){
+                        count = 0;
+                        for(j = 1; j <= seats[i-1].length+1; j++)
+                            if(seats[i-1][j-1] == 0){
+                                count++;
+                            }
+                            if(count != 0)
+                                col.innerHTML += "<option value=" + i + ">" + i + "</option>"
+                    }
+                });
+
+                $('#join').dialog({
+                    autoOpen:false,
+                    draggalbe:false,
+                    modal:true,
+                    resizable:false,
+                    width:300,
+                    buttons: [
+                        {
+                            text: "送出",
+                            click: function (){
+                                var form = document.getElementById("form");
+                                var name = form[2].value;
+                                var phone = form[3].value;
+                                var note = form[4].value;
+                                if(form[0].value == "請選擇"){
+                                    document.getElementById("elert").innerText = "請填寫座位後再送出!";
+                                }else{
+                                    var ret = confirm("你的姓名是: " + name + "\n電話是: " + phone + "\n您預定的座位為第" + form[0].value + "排" + form[1].value + "號座位" + "\n備註: " + note);
+                                    if(ret){
+                                        if(form[1].value<10){
+                                        console.log("yes");
+                                        var seat = form[0].value*10 + form[1].value;
+                                        }
+                                        else{
+                                            console.log("no");
+                                            var seat = form[0].value + form[1].value;
+                                        }
+                                        db.collection("大成畫位").doc(seat).set({
+                                            姓名:name,
+                                            電話:phone,
+                                            備註:note
+                                        });
+                                        var btn = document.getElementById("button");
+                                        btn.innerHTML = '<b>期待您的參加!</b>'
+                                    }
+                                }
+                            }
+                        },{
+                            text: "取消",
+                            click: function() {
+                                $( this ).dialog( "close" );
+                            }
+                        }
+                    ]
+                });
+
+                function change(){
+                    var option = document.getElementById("seat");
+                    option.innerHTML = null;
+                    i = document.getElementById("col").value
+                    for(j = 1; j <= seats[i-1].length+1; j++)
+                        if(seats[i-1][j-1] == 0)
+                            option.innerHTML += "<option value=" + j + ">" + j + "</option>"
+                }
+
+                $( "#order" ).click(function( event ) {
+                $( "#join" ).dialog( "open" );
+                event.preventDefault();
+                });
+
+            </script>
+
+        </article><hr>
+        <footer>
+            <a href="https://sites.google.com/view/jswb25th" title="歡迎點進來"><h3>25屆金山管樂</h3></a>
+        </footer>
+    </body>
+</html>
