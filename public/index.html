@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+    <head>
+        <meta charset="utf-8" />
+        <script src="https://ajax.aspnetcdn.com/ajax/jQuery/jquery-1.8.0.js"></script>
+
+        <link href="jquery-ui.css" rel="stylesheet">
+        <title>金山管樂24屆大成畫位表</title>
+
+        <style>
+            body{
+                background-color: #B9A2E8;
+                font-family: "Trebuchet MS", sans-serif;
+                margin: 50px;text-align: center;}
+            h2   {color: blue;text-align: center;}
+            p    {color: brown;text-align: center;}
+            strong{font-size: 30px;}
+            th, td {
+                border: 5px solid black;
+                border-collapse: collapse;
+                text-align: center;}
+            div{
+                text-align: center;}
+            footer{text-align: center;}
+            .ui-dialog-titlebar-close {visibility: hidden;}
+            @media(min-width:280px){h2{font-size: 22px;}p{font-size: 13px;}}
+            @media(min-width:348px){h2{font-size: 30px;}p{font-size: 16px;}}
+            @media(min-width:400px){h2{font-size: 35px;}p{font-size: 20px;}}
+            @media(min-width:480px){h2{font-size: 40px;}p{font-size: 28px;}}
+        </style>
+    </head>
+
+    <body>
+        <header>
+            <meta name="viewport" content="width=device-width, initial-scale=1">
+        </header>
+        <article>
+            <nav><a href=""></a></nav>
+            <div><h2>金山管樂24屆大成</h1><strong>畫位表</strong>
+                <p>目前全國仍為二級警戒，未開放所有位置，請想入場的觀眾以網路上可預定位置進行登記</p>
+                <img src="images/seat.jpg"width="100%"></img>
+                <p id="button"><button id="order" class="ui-button ui-corner-all ui-widget">
+                <span class="ui-icon ui-icon-newwin"></span>畫位</button></p></div>
+            <div id="join" title="填寫資料">
+                <form id="form" autocomplete="on">
+                    <label for="col">排:</label>
+                    <select id="col" onchange="change()">
+                        <option>請選擇</option>
+                    </select>
+                    <label for="seat">座位:</label>
+                    <select id="seat"></select><br>
+                    <label for="name">姓名:</label><br>
+                    <input type="text" id="name"><br>
+                    <label for="phone">電話:</label><br>
+                    <input type="text" id="phone"><br>
+                    <label for="notice">備註:</label><br>
+                    <textarea name="notice" rows="2" cols="30"></textarea><br>
+                    <span id="elert" style="color:red"></span>
+                </form>
+            </div>
+
+            <script src="jquery-ui.js"></script>
+            <script src="https://www.gstatic.com/firebasejs/8.6.4/firebase-app.js"></script>
+            <script src="https://www.gstatic.com/firebasejs/8.6.2/firebase-firestore.js"></script>
+            <script src="https://www.gstatic.com/firebasejs/8.6.2/firebase-analytics.js"></script>
+            <script>
+                
+                var config = {
+                    projectId: "jswb-24th",
+                    apiKey: "t2TDmzMo9uuigxs8DCw2unyqGOxAfe0Yq6PMjzPy",
+                    authDomain: "jswb-24th.firebaseapp.com",
+                    databaseURL: "https://jswb-24th-default-rtdb.firebaseio.com/",
+                    
+                };
+                firebase.initializeApp(config);
+
+                var db = firebase.firestore();
+
+                var seats = Array(19);
+                seats[0] = Array(18).fill(1);
+                seats[1] = Array(19).fill(1);
+                seats[2] = Array(20).fill(1);
+                //前三排不坐人
+
+                seats[3] = Array(19).fill(1);
+                seats[3][0] = 0;seats[3][1] = 0;seats[3][6] = 0;seats[3][7] = 0;seats[3][8] = 0;seats[3][9] = 0;
+                //第四排1,2,7,8,9,10                
+                seats[4] = Array(20).fill(1);
+                seats[4][12] = 0;seats[4][13] = 0;seats[4][18] = 0;seats[4][19] = 0;
+                //第五排13,14,19,20
+                for(i = 5; i<9; i++)
+                    seats[i] = Array(21).fill(1);
+                seats[5][13] = 0;seats[5][14] = 0;seats[5][19] = 0;seats[5][20] = 0;
+                seats[7][13] = 0;seats[7][14] = 0;seats[7][19] = 0;seats[7][20] = 0;
+                //第六排、第八排14,15,20,21
+                seats[6][0] = 0;seats[6][1] = 0;seats[6][6] = 0;seats[6][7] = 0;seats[6][8] = 0;seats[6][9] = 0;
+                seats[8][0] = 0;seats[8][1] = 0;seats[8][6] = 0;seats[8][7] = 0;seats[8][8] = 0;seats[8][9] = 0;
+                //第七排、第九排1,2,7,8,9,10
+                seats[9] = Array(13).fill(1);
+                seats[9][2] = 0;seats[9][3] = 0;seats[9][4] = 0;seats[9][5] = 0;seats[9][10] = 0;seats[9][12] = 0;
+                //第十排3,4,5,6,11,13
+                seats[10] = Array(24).fill(1);
+                seats[10][16] = 0;seats[10][17] = 0;seats[10][22] = 0;seats[10][23] = 0;
+                //第十一排17,18,23,24
+                for(i = 11; i < 19; i++)
+                    seats[i] = Array(25).fill(1);
+                seats[11][0] = 0;seats[11][2] = 0;seats[11][5] = 0;seats[11][7] = 0;seats[11][8] = 0;seats[11][10] = 0;
+                seats[13][0] = 0;seats[13][2] = 0;seats[13][5] = 0;seats[13][7] = 0;seats[13][8] = 0;seats[13][10] = 0;
+                seats[15][0] = 0;seats[15][2] = 0;seats[15][5] = 0;seats[15][7] = 0;seats[15][8] = 0;seats[15][10] = 0;
+                seats[17][0] = 0;seats[17][2] = 0;seats[17][5] = 0;seats[17][7] = 0;seats[17][8] = 0;seats[17][10] = 0;
+                //第十二排、第十四排、第十六排、第十八排1,3,6,8,9,11
+                seats[12][16] = 0;seats[12][17] = 0;seats[12][22] = 0;seats[12][23] = 0;
+                seats[14][16] = 0;seats[14][17] = 0;seats[14][22] = 0;seats[14][23] = 0;
+                seats[16][16] = 0;seats[16][17] = 0;seats[16][22] = 0;seats[16][23] = 0;
+                //第十三排、第十五排、第十七排17,18,23,24
+                for(i = 0; i<15; i++)
+                    seats[18][i] = 1;
+                seats[18][16] = 0;seats[18][17] = 0;seats[18][22] = 0;seats[18][23] = 0;
+                //第十九排17,18,23,24
+                db.collection("大成畫位").get().then((querySnapshot) => {
+                    querySnapshot.forEach((doc) => {
+                        var num = doc.id % 100;
+                        var row = (doc.id-num)/100;
+                        seats[row-1][num-1] = 1;
+                    });
+
+                    var col = document.getElementById("col");
+                    var option = document.getElementById("seat");
+
+                    for(i = 1; i <= 19; i++){
+                        count = 0;
+                        for(j = 1; j <= seats[i-1].length+1; j++)
+                            if(seats[i-1][j-1] == 0){
+                                count++;
+                            }
+                            if(count != 0)
+                                col.innerHTML += "<option value=" + i + ">" + i + "</option>"
+                    }
+                });
+
+                $('#join').dialog({
+                    autoOpen:false,
+                    draggalbe:false,
+                    modal:true,
+                    resizable:false,
+                    width:300,
+                    buttons: [
+                        {
+                            text: "送出",
+                            click: function (){
+                                var form = document.getElementById("form");
+                                var name = form[2].value;
+                                var phone = form[3].value;
+                                var note = form[4].value;
+                                if(form[0].value == "請選擇"){
+                                    document.getElementById("elert").innerText = "請填寫座位後再送出!";
+                                }else{
+                                    var ret = confirm("你的姓名是: " + name + "\n電話是: " + phone + "\n您預定的座位為第" + form[0].value + "排" + form[1].value + "號座位" + "\n備註: " + note);
+                                    if(ret){
+                                        if(form[1].value<10){
+                                        console.log("yes");
+                                        var seat = form[0].value*10 + form[1].value;
+                                        }
+                                        else{
+                                            console.log("no");
+                                            var seat = form[0].value + form[1].value;
+                                        }
+                                        db.collection("大成畫位").doc(seat).set({
+                                            姓名:name,
+                                            電話:phone,
+                                            備註:note
+                                        });
+                                        $( this ).dialog( "close" );
+                                        var btn = document.getElementById("button");
+                                        btn.innerHTML = '<b>期待您的參加!</b>'
+                                    }
+                                }
+                            }
+                        },{
+                            text: "取消",
+                            click: function() {
+                                $( this ).dialog( "close" );
+                            }
+                        }
+                    ]
+                });
+
+                function change(){
+                    var option = document.getElementById("seat");
+                    option.innerHTML = null;
+                    i = document.getElementById("col").value
+                    for(j = 1; j <= seats[i-1].length+1; j++)
+                        if(seats[i-1][j-1] == 0)
+                            option.innerHTML += "<option value=" + j + ">" + j + "</option>"
+                }
+
+                $( "#order" ).click(function( event ) {
+                $( "#join" ).dialog( "open" );
+                event.preventDefault();
+                });
+
+            </script>
+
+        </article><hr>
+        <footer>
+            <a href="https://sites.google.com/view/jswb25th" title="歡迎點進來"><h3>25屆金山管樂</h3></a>
+        </footer>
+    </body>
+</html>
